@@ -2,7 +2,7 @@
 
 A production-oriented internal app for preparing higher-quality LinkedIn outreach without scraping, automation, or message sending.
 
-## Step 1 — Product / Tech Plan
+## Step 1 - Product / Tech Plan
 
 ### Product summary
 - Single-user internal workspace to store leads, analyse websites, spot CRO issues, generate short message sequences, and manage workflow.
@@ -68,10 +68,17 @@ A production-oriented internal app for preparing higher-quality LinkedIn outreac
 
 ```bash
 npm install
-cp .env.example .env
 npm run prisma:generate
 npm run prisma:migrate -- --name init
 npm run dev
+```
+
+Create a local `.env` manually before running the app:
+
+```env
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/linkedin_outreach?schema=public"
+OPENAI_API_KEY=""
+NODE_ENV="development"
 ```
 
 Open `http://localhost:3000`.
