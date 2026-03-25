@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateDraftBundle } from "@/lib/drafts/service";
-import { DRAFT_FIELD_KEYS, type ApprovedDraftPayload, type LeadContext } from "@/lib/drafts/types";
+import { DRAFT_FIELD_KEYS, coerceDraftBundle, type ApprovedDraftPayload, type LeadContext } from "@/lib/drafts/types";
 import { logEvent } from "@/lib/server/events";
 import { saveApprovedDraft } from "@/lib/server/drafts-repo";
 
@@ -51,14 +51,14 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: "Missing drafts payload." }, { status: 400 });
   }
 
-  const missingKey = DRAFT_FIELD_KEYS.find((key) => typeof payload.drafts?.[key] !== "string");
-  if (missingKey) {
-    return NextResponse.json({ error: `Missing required draft field: ${missingKey}` }, { status: 400 });
+  const normalizedDrafts = coerceDraftBundle(payload.drafts);
+  if (!normalizedDrafts) {
+    return NextResponse.json({ error: "Drafts payload was invalid or missing required fields." }, { status: 400 });
   }
 
   const approved: ApprovedDraftPayload = {
     leadId: id,
-    drafts: payload.drafts,
+    drafts: normalizedDrafts,
     approvedAt: new Date().toISOString(),
   };
 

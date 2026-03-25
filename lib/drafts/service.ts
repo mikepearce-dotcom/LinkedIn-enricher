@@ -1,10 +1,10 @@
 import OpenAI from "openai";
 import { buildDraftSystemPrompt, buildDraftUserPrompt, DEFAULT_DRAFT_MODEL } from "./prompts";
-import { DRAFT_FIELD_KEYS, type DraftBundle, type LeadContext } from "./types";
+import { coerceDraftBundle, type DraftBundle, type LeadContext } from "./types";
 
-function isDraftBundle(value: unknown): value is DraftBundle {
-  if (!value || typeof value !== "object") return false;
-  return DRAFT_FIELD_KEYS.every((key) => typeof (value as DraftBundle)[key] === "string");
+function parseJsonPayload(content: string): unknown {
+  const cleaned = content.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/, "").trim();
+  return JSON.parse(cleaned);
 }
 
 export async function generateDraftBundle(lead: LeadContext): Promise<{ drafts: DraftBundle; model: string }> {
@@ -25,10 +25,11 @@ export async function generateDraftBundle(lead: LeadContext): Promise<{ drafts: 
     throw new Error("OpenAI returned an empty response while generating drafts.");
   }
 
-  const parsed = JSON.parse(content) as unknown;
-  if (!isDraftBundle(parsed)) {
+  const parsed = parseJsonPayload(content);
+  const drafts = coerceDraftBundle(parsed);
+  if (!drafts) {
     throw new Error("OpenAI response did not match the required draft schema.");
   }
 
-  return { drafts: parsed, model: completion.model };
+  return { drafts, model: completion.model };
 }
