@@ -11,6 +11,9 @@ export async function POST(_: Request, { params }: { params: Promise<{ id: strin
   try {
     const lead = await prisma.lead.findUnique({ where: { id } });
     if (!lead) return NextResponse.json({ error: "Lead not found" }, { status: 404 });
+    if (!lead.websiteUrl) {
+      return NextResponse.json({ error: "Website URL required before analysis" }, { status: 400 });
+    }
 
     const analysis = await analyseWebsite(lead.websiteUrl);
     const score = calculateOpportunityScore({

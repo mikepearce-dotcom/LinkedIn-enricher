@@ -1,0 +1,1 @@
+ALTER TABLE "Lead" ALTER COLUMN "websiteUrl" DROP NOT NULL;

@@ -23,7 +23,7 @@ enum LeadStatus {
 model Lead {
   id                 String           @id @default(cuid())
   companyName        String
-  websiteUrl         String
+  websiteUrl         String?
   contactName        String
   linkedinProfileUrl String?
   role               String?
@@ -42,16 +42,16 @@ model Lead {
 }
 
 model LeadAnalysis {
-  id                 String   @id @default(cuid())
-  leadId             String
-  homepageTitle      String?
+  id                  String   @id @default(cuid())
+  leadId              String
+  homepageTitle       String?
   homepageDescription String?
-  homepageSummary    String
-  observedIssues     Json
-  likelyHypotheses   Json
-  nextChecks         Json
-  fetchedAt          DateTime @default(now())
-  lead               Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  homepageSummary     String
+  observedIssues      Json
+  likelyHypotheses    Json
+  nextChecks          Json
+  fetchedAt           DateTime @default(now())
+  lead                Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
   @@index([leadId, fetchedAt(sort: Desc)])
 }

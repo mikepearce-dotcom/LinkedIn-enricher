@@ -7,7 +7,7 @@ import { databaseErrorResponse } from "@/lib/api-error";
 
 const updateSchema = z.object({
   companyName: z.string().min(1).optional(),
-  websiteUrl: z.string().url().optional(),
+  websiteUrl: z.string().url().optional().or(z.literal("")),
   contactName: z.string().min(1).optional(),
   linkedinProfileUrl: z.string().url().optional().or(z.literal("")),
   role: z.string().optional(),
@@ -17,6 +17,12 @@ const updateSchema = z.object({
   notes: z.string().optional(),
   status: z.nativeEnum(LeadStatus).optional()
 });
+
+function normaliseOptionalString(value?: string) {
+  if (value === undefined) return undefined;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -52,8 +58,19 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
+  const data = {
+    ...parsed.data,
+    websiteUrl: normaliseOptionalString(parsed.data.websiteUrl),
+    linkedinProfileUrl: normaliseOptionalString(parsed.data.linkedinProfileUrl),
+    role: normaliseOptionalString(parsed.data.role),
+    companySize: normaliseOptionalString(parsed.data.companySize),
+    industry: normaliseOptionalString(parsed.data.industry),
+    source: normaliseOptionalString(parsed.data.source),
+    notes: normaliseOptionalString(parsed.data.notes)
+  };
+
   try {
-    const lead = await prisma.lead.update({ where: { id }, data: parsed.data });
+    const lead = await prisma.lead.update({ where: { id }, data });
     await logEvent(id, "updated", "Lead updated");
     return NextResponse.json(lead);
   } catch (error) {

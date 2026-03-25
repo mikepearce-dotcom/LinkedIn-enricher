@@ -6,7 +6,7 @@ import { databaseErrorResponse } from "@/lib/api-error";
 
 const leadSchema = z.object({
   companyName: z.string().min(1),
-  websiteUrl: z.string().url(),
+  websiteUrl: z.string().url().optional().or(z.literal("")),
   contactName: z.string().min(1),
   linkedinProfileUrl: z.string().url().optional().or(z.literal("")),
   role: z.string().optional(),
@@ -15,6 +15,11 @@ const leadSchema = z.object({
   source: z.string().optional(),
   notes: z.string().optional()
 });
+
+function normaliseOptionalString(value?: string) {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
 
 export async function GET() {
   try {
@@ -39,8 +44,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
+  const data = {
+    ...parsed.data,
+    websiteUrl: normaliseOptionalString(parsed.data.websiteUrl),
+    linkedinProfileUrl: normaliseOptionalString(parsed.data.linkedinProfileUrl),
+    role: normaliseOptionalString(parsed.data.role),
+    companySize: normaliseOptionalString(parsed.data.companySize),
+    industry: normaliseOptionalString(parsed.data.industry),
+    source: normaliseOptionalString(parsed.data.source),
+    notes: normaliseOptionalString(parsed.data.notes)
+  };
+
   try {
-    const lead = await prisma.lead.create({ data: parsed.data });
+    const lead = await prisma.lead.create({ data });
     await logEvent(lead.id, "created", "Lead created");
     return NextResponse.json(lead, { status: 201 });
   } catch (error) {
