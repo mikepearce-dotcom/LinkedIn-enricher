@@ -2,6 +2,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { toLabel } from "@/lib/status";
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardPage() {
   const [totalLeads, statusCounts, topScored, recentAnalysed, readyToContact] = await Promise.all([
     prisma.lead.count(),
