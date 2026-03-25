@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LinkedIn Enricher Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>Lead Dashboard</h1>
+        <p>Snapshot of your enrichment pipeline.</p>
+      </header>
+
+      <section class="widget-grid">
+        <article class="widget">
+          <h2>Total Leads</h2>
+          <p id="total-leads" class="stat">-</p>
+        </article>
+
+        <article class="widget">
+          <h2>Leads by Status</h2>
+          <ul id="leads-by-status" class="list"></ul>
+        </article>
+
+        <article class="widget">
+          <h2>Top Scored Leads</h2>
+          <ul id="top-scored-leads" class="list"></ul>
+        </article>
+
+        <article class="widget">
+          <h2>Recently Analysed</h2>
+          <ul id="recently-analysed" class="list"></ul>
+        </article>
+
+        <article class="widget full-width">
+          <h2>Ready-to-Contact List</h2>
+          <ul id="ready-to-contact" class="list"></ul>
+        </article>
+      </section>
+    </main>
+
+    <script src="dashboard.js"></script>
+  </body>
+</html>

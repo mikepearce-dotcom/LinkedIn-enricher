@@ -1,0 +1,24 @@
+{
+  "name": "linkedin-enricher",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LinkedIn lead enrichment dashboard",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "build": "echo 'No build step required for this Node.js app'",
+    "start": "node src/server.js",
+    "lint": "node --check src/server.js src/data/leads.js src/services/dashboardService.js src/public/dashboard.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.6.0",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9",
+    "prisma": "^6.6.0"
+  }
+}
