@@ -13,7 +13,7 @@ const EMPTY_DRAFTS: DraftBundle = {
   connectionNote: "",
   followUp1: "",
   followUp2: "",
-  auditOfferMessage: "",
+  auditOffer: "",
 };
 
 export default function LeadDraftsPage() {
