@@ -1,73 +1,32 @@
-import { NextRequest, NextResponse } from "next/server";
-import { generateDraftBundle } from "@/lib/drafts/service";
-import { DRAFT_FIELD_KEYS, coerceDraftBundle, type ApprovedDraftPayload, type LeadContext } from "@/lib/drafts/types";
-import { logEvent } from "@/lib/server/events";
-import { saveApprovedDraft } from "@/lib/server/drafts-repo";
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { generateDrafts } from "@/lib/drafts";
+import { logEvent } from "@/lib/events";
 
-function coerceLeadContext(id: string, body: unknown): LeadContext {
-  if (!body || typeof body !== "object") {
-    return { id };
-  }
-
-  const payload = body as Partial<LeadContext>;
-  return {
-    id,
-    fullName: payload.fullName,
-    role: payload.role,
-    company: payload.company,
-    headline: payload.headline,
-    recentSignals: Array.isArray(payload.recentSignals) ? payload.recentSignals.filter(Boolean) : undefined,
-  };
-}
-
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const json = await request.json().catch(() => ({}));
-  const lead = coerceLeadContext(id, json);
 
-  const { drafts, model } = await generateDraftBundle(lead);
-  const generatedAt = new Date().toISOString();
-
-  await logEvent("DraftsGenerated", {
-    leadId: id,
-    model,
-    generatedAt,
-    fields: DRAFT_FIELD_KEYS,
+  const lead = await prisma.lead.findUnique({
+    where: { id },
+    include: { analyses: { orderBy: { fetchedAt: "desc" }, take: 1 } }
   });
 
-  return NextResponse.json({
-    leadId: id,
-    drafts,
-    model,
-    generatedAt,
-  });
-}
-
-export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const payload = (await request.json()) as Partial<ApprovedDraftPayload>;
-
-  if (!payload?.drafts || typeof payload.drafts !== "object") {
-    return NextResponse.json({ error: "Missing drafts payload." }, { status: 400 });
+  if (!lead || lead.analyses.length === 0) {
+    return NextResponse.json({ error: "Analysis required before draft generation" }, { status: 400 });
   }
 
-  const normalizedDrafts = coerceDraftBundle(payload.drafts);
-  if (!normalizedDrafts) {
-    return NextResponse.json({ error: "Drafts payload was invalid or missing required fields." }, { status: 400 });
-  }
-
-  const approved: ApprovedDraftPayload = {
-    leadId: id,
-    drafts: normalizedDrafts,
-    approvedAt: new Date().toISOString(),
-  };
-
-  await saveApprovedDraft(approved);
-  await logEvent("DraftApproved", {
-    leadId: id,
-    approvedAt: approved.approvedAt,
-    fields: DRAFT_FIELD_KEYS,
+  const analysis = lead.analyses[0];
+  const drafts = await generateDrafts({
+    companyName: lead.companyName,
+    contactName: lead.contactName,
+    role: lead.role,
+    summary: analysis.homepageSummary,
+    issues: analysis.observedIssues as string[]
   });
 
-  return NextResponse.json(approved);
+  const created = await prisma.messageDraftSet.create({ data: { leadId: id, ...drafts } });
+  await prisma.lead.update({ where: { id }, data: { status: "READY_TO_CONTACT" } });
+  await logEvent(id, "drafts_generated", "Draft message sequence generated");
+
+  return NextResponse.json(created);
 }

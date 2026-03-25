@@ -1,138 +1,88 @@
-# LinkedIn Enricher
+# LinkedIn Outreach Prep (CRO Audit)
 
-A lightweight Node.js + Prisma starter for managing enriched LinkedIn leads, with a dashboard that includes:
+A production-oriented internal app for preparing higher-quality LinkedIn outreach without scraping, automation, or message sending.
 
-- Total leads
-- Leads by status
-- Top scored leads
-- Recently analysed leads
-- Ready-to-contact list
+## Step 1 — Product / Tech Plan
 
-## Prerequisites
+### Product summary
+- Single-user internal workspace to store leads, analyse websites, spot CRO issues, generate short message sequences, and manage workflow.
+- Built around relevance-first, problem-first outreach and concise British-English messaging.
 
-- Node.js 20+
-- npm 10+
-- PostgreSQL (local or cloud)
+### Architecture overview
+- **Frontend:** Next.js App Router + TypeScript + Tailwind.
+- **Backend:** Next.js Route Handlers (server-side API).
+- **Database:** PostgreSQL with Prisma ORM.
+- **AI layer:** OpenAI API on server routes only.
+- **Hosting:** Railway with environment variables.
 
-## Local setup
+### Database schema
+- `Lead` (core entity + pipeline stage + score).
+- `LeadAnalysis` (homepage summary, observed issues, hypotheses, next checks).
+- `MessageDraftSet` (connection note + follow-ups + offer framing).
+- `Note` (internal notes).
+- `ActivityEvent` (timeline for key actions).
 
-1. Clone the repository:
+### Route map
+- `/` dashboard
+- `/leads` lead list + quick create
+- `/leads/[id]` lead workspace
+- `/api/leads` GET/POST
+- `/api/leads/[id]` GET/PATCH/DELETE
+- `/api/leads/[id]/analyse` POST
+- `/api/leads/[id]/drafts` POST
+- `/api/leads/[id]/notes` POST
+- `/api/leads/[id]/status` POST
 
-   ```bash
-   git clone <your-repo-url>
-   cd LinkedIn-enricher
-   ```
+### OpenAI prompt strategy
+- Website analysis prompt enforces separation of observed issues, hypotheses, and next checks.
+- Message prompt enforces British English, short-form, problem-first, low-hype tone.
+- JSON schema output format for consistent parsing.
 
-2. Install dependencies:
+### Risks / edge cases
+- Some websites block fetch/crawlers.
+- Incomplete homepage copy can reduce analysis quality.
+- No OpenAI key: app falls back to deterministic defaults.
 
-   ```bash
-   npm install
-   ```
+### Railway deployment plan
+1. Push repo to GitHub.
+2. Create Railway project from GitHub repo.
+3. Add Postgres service.
+4. Set env vars: `DATABASE_URL`, `OPENAI_API_KEY`, `NODE_ENV=production`.
+5. Deploy and run `npm run prisma:deploy`.
 
-3. Create environment variables:
+### Git structure
+- `app/` routes + API handlers
+- `components/` UI components
+- `lib/` Prisma client, scoring, AI services
+- `prisma/` schema + migrations
 
-   ```bash
-   cp .env.example .env
-   ```
+### Phased build plan
+1. Plan (this section)
+2. Scaffold (Next + Tailwind + Prisma wiring)
+3. Core features (CRUD, analysis, drafts, notes, activity, dashboard)
+4. Deployment readiness (scripts, env docs, Railway runbook)
 
-4. Update `.env` with your PostgreSQL connection string (`DATABASE_URL`).
+---
 
-5. Generate Prisma client:
+## Setup
 
-   ```bash
-   npm run prisma:generate
-   ```
+```bash
+npm install
+cp .env.example .env
+npm run prisma:generate
+npm run prisma:migrate -- --name init
+npm run dev
+```
 
-6. Run migrations:
-
-   ```bash
-   npm run prisma:migrate -- --name init
-   ```
-
-7. Start the development server:
-
-   ```bash
-   npm run dev
-   ```
-
-8. Open the dashboard:
-
-   - `http://localhost:3000`
+Open `http://localhost:3000`.
 
 ## Environment variables
 
-Set these in `.env` (and in Railway for production):
+- `DATABASE_URL` (required)
+- `OPENAI_API_KEY` (recommended)
+- `NODE_ENV` (required in deployment)
 
-- `PORT` (optional): Port for the Node server (default `3000`).
-- `DATABASE_URL` (required): Prisma PostgreSQL connection string.
-
-## Prisma commands
-
-- Generate client:
-
-  ```bash
-  npm run prisma:generate
-  ```
-
-- Create/apply migration in dev:
-
-  ```bash
-  npm run prisma:migrate -- --name <migration_name>
-  ```
-
-- Open Prisma Studio (optional):
-
-  ```bash
-  npm run prisma:studio
-  ```
-
-## GitHub push steps
-
-1. Create a new branch:
-
-   ```bash
-   git checkout -b feat/dashboard-widgets
-   ```
-
-2. Stage changes:
-
-   ```bash
-   git add .
-   ```
-
-3. Commit:
-
-   ```bash
-   git commit -m "Implement dashboard widgets and docs"
-   ```
-
-4. Push branch:
-
-   ```bash
-   git push -u origin feat/dashboard-widgets
-   ```
-
-5. Open a Pull Request on GitHub.
-
-## Railway deployment steps
-
-1. Push your code to GitHub.
-2. Create a new project in Railway.
-3. Select **Deploy from GitHub repo** and choose this repository.
-4. Provision a PostgreSQL service in Railway.
-5. In Railway project variables, set:
-   - `DATABASE_URL` (from Railway PostgreSQL)
-   - `PORT` (Railway typically injects this automatically)
-6. Trigger deployment.
-7. Run migrations against the Railway database:
-
-   ```bash
-   npm run prisma:migrate -- --name production-init
-   ```
-
-8. Verify the deployed app URL and dashboard widgets.
-
-## Available npm scripts
+## Scripts
 
 - `npm run dev`
 - `npm run build`
@@ -140,4 +90,16 @@ Set these in `.env` (and in Railway for production):
 - `npm run lint`
 - `npm run prisma:generate`
 - `npm run prisma:migrate`
-- `npm run prisma:studio` (optional)
+- `npm run prisma:deploy`
+
+## Git + Railway flow
+
+```bash
+git init
+git add .
+git commit -m "Initial LinkedIn outreach prep app"
+git remote add origin <github-url>
+git push -u origin main
+```
+
+Then link GitHub repo in Railway and deploy.
