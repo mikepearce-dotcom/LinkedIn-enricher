@@ -1,24 +1,37 @@
 {
-  "name": "linkedin-enricher",
+  "name": "linkedin-outreach-prep",
   "version": "1.0.0",
   "private": true,
-  "description": "LinkedIn lead enrichment dashboard",
-  "main": "src/server.js",
+  "description": "Internal LinkedIn outreach preparation app for CRO audit prospecting",
   "scripts": {
-    "dev": "nodemon src/server.js",
-    "build": "echo 'No build step required for this Node.js app'",
-    "start": "node src/server.js",
-    "lint": "node --check src/server.js src/data/leads.js src/services/dashboardService.js src/public/dashboard.js",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
-    "express": "^4.21.2"
+    "cheerio": "^1.0.0",
+    "next": "^15.1.11",
+    "openai": "^5.12.2",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
-    "nodemon": "^3.1.9",
-    "prisma": "^6.6.0"
+    "@types/node": "^22.13.13",
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.4",
+    "autoprefixer": "^10.4.21",
+    "eslint": "^9.22.0",
+    "eslint-config-next": "^15.1.11",
+    "postcss": "^8.5.3",
+    "prisma": "^6.6.0",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.8.2"
   }
 }
