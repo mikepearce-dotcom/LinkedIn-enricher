@@ -7,15 +7,89 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum LeadStatus {
+  NEW
+  REVIEWING
+  ANALYSED
+  READY_TO_CONTACT
+  CONTACTED
+  REPLIED
+  CALL_BOOKED
+  WON
+  LOST
+  ARCHIVED
+}
+
 model Lead {
-  id             Int      @id @default(autoincrement())
-  fullName       String
-  company        String
-  status         String
-  score          Int
-  analysedAt     DateTime @default(now())
-  email          String   @unique
-  readyToContact Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                 String           @id @default(cuid())
+  companyName        String
+  websiteUrl         String
+  contactName        String
+  linkedinProfileUrl String?
+  role               String?
+  companySize        String?
+  industry           String?
+  source             String?
+  notes              String?
+  score              Int?
+  status             LeadStatus       @default(NEW)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  analyses           LeadAnalysis[]
+  messageDraftSets   MessageDraftSet[]
+  leadNotes          Note[]
+  events             ActivityEvent[]
+}
+
+model LeadAnalysis {
+  id                 String   @id @default(cuid())
+  leadId             String
+  homepageTitle      String?
+  homepageDescription String?
+  homepageSummary    String
+  observedIssues     Json
+  likelyHypotheses   Json
+  nextChecks         Json
+  fetchedAt          DateTime @default(now())
+  lead               Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId, fetchedAt(sort: Desc)])
+}
+
+model MessageDraftSet {
+  id                String   @id @default(cuid())
+  leadId            String
+  whyThisLead       String
+  coreProblemAngle  String
+  valueHook         String
+  connectionNote    String
+  followUpOne       String
+  followUpTwo       String
+  auditOfferMessage String
+  offerPositioning  String
+  isApproved        Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  lead              Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId, createdAt(sort: Desc)])
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  leadId    String
+  content   String
+  createdAt DateTime @default(now())
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+}
+
+model ActivityEvent {
+  id        String   @id @default(cuid())
+  leadId    String
+  type      String
+  message   String
+  createdAt DateTime @default(now())
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId, createdAt(sort: Desc)])
 }
